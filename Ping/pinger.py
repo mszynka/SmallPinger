@@ -1,8 +1,12 @@
 import json
 import logging
 import subprocess
+from datetime import datetime
+from io import StringIO
 from queue import Queue
 from threading import Thread
+
+from Database.DatabaseController import Database
 
 
 # noinspection SpellCheckingInspection
@@ -12,7 +16,9 @@ class Pinger:
 		Default constructor
 		Sets config values and destination hosts
 		"""
-		self.max_threads = 4
+		self.database = Database()
+		self.database_stream_str = StringIO()
+		self.database_date_time = datetime.today().strftime("%d.%m.%Y %H:%M:%S")
 		self.queue = Queue()
 		self.config_path = "config/config.json"
 		self.hosts_path = "config/hosts.json"
@@ -22,8 +28,9 @@ class Pinger:
 
 		with open(self.config_path) as data_file:
 			config = json.load(data_file)
-			if config["maxWorkers"]:
-				self.max_threads = config["maxWorkers"]
+			self.max_threads = config.get("maxWorkers") if config.get("maxWorkers") else 4
+			self.useSqlte = config.get("usesDatabase") if config.get("usesDatabase") else True
+			self.sqlitePath = config.get("databasePath") if config.get("databasePath") else "sqlite_log.db"
 
 	def configure_logger (self):
 		"""
@@ -49,6 +56,19 @@ class Pinger:
 		console.setFormatter(formatter)
 		logging.getLogger('').addHandler(console)
 
+	def configure_database_logger (self):
+		"""
+		Defines custom database logger for future info
+		"""
+		database_logger = logging.StreamHandler(stream=self.database_stream_str)
+		database_logger.setLevel(logging.NOTSET)
+		formatter = logging.Formatter('%(levelname)-8s %(message)s')
+		database_logger.setFormatter(formatter)
+		logging.getLogger('').addHandler(database_logger)
+
+	def save_log_to_database (self):
+		self.database.log(self.database_date_time, str(self.hosts), self.database_stream_str.getvalue())
+
 	def pinger (self, thread_id):
 		"""
 		Pings subnet
@@ -73,6 +93,7 @@ class Pinger:
 		"""
 		self.configure_logger()
 		self.configure_console_logger()
+		self.configure_database_logger()
 
 		if len(self.hosts) < self.max_threads:
 			logging.warning("Set workers is greater than required. Min required workers is %d.", len(self.hosts))
@@ -96,3 +117,5 @@ class Pinger:
 			logging.info("Finished pinging %d hosts", len(self.hosts))
 		else:
 			logging.info("Finished pinging %s", self.hosts[0]["name"])
+
+		self.save_log_to_database()
