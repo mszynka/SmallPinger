@@ -7,6 +7,7 @@ from queue import Queue
 from threading import Thread
 
 from Database.DatabaseController import Database
+from Ping.Loggers import Loggers
 
 
 # noinspection SpellCheckingInspection
@@ -31,40 +32,6 @@ class Pinger:
 			self.max_threads = config.get("maxWorkers") if config.get("maxWorkers") else 4
 			self.useSqlte = config.get("usesDatabase") if config.get("usesDatabase") else True
 			self.sqlitePath = config.get("databasePath") if config.get("databasePath") else "sqlite_log.db"
-
-	def configure_logger (self):
-		"""
-		Configures logger and initiates logging by inserting info message
-		"""
-		# Hack for log line separator
-		with open("pinger.log", "a") as log:
-			log.write(
-				"==============================================================================================\n")
-
-		logging.basicConfig(filename="pinger.log", level=logging.DEBUG, filemode='a',
-		                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s', datefmt='%d.%m.%Y %H:%M:%S')
-		logging.info("Started with max threads: %d", self.max_threads)
-
-	@staticmethod
-	def configure_console_logger ():
-		"""
-		Defines custom console logger for development and info for user
-		"""
-		console = logging.StreamHandler()
-		console.setLevel(logging.INFO)  # Change level for console logger in development mode
-		formatter = logging.Formatter('%(levelname)-8s %(message)s')
-		console.setFormatter(formatter)
-		logging.getLogger('').addHandler(console)
-
-	def configure_database_logger (self):
-		"""
-		Defines custom database logger for future info
-		"""
-		database_logger = logging.StreamHandler(stream=self.database_stream_str)
-		database_logger.setLevel(logging.NOTSET)
-		formatter = logging.Formatter('%(levelname)-8s %(message)s')
-		database_logger.setFormatter(formatter)
-		logging.getLogger('').addHandler(database_logger)
 
 	def save_log_to_database (self):
 		self.database.log(self.database_date_time, str(self.hosts), self.database_stream_str.getvalue())
@@ -91,17 +58,10 @@ class Pinger:
 		"""
 		Runs threads with pinger
 		"""
-		self.configure_logger()
-		self.configure_console_logger()
-		self.configure_database_logger()
-
-		if len(self.hosts) < self.max_threads:
-			logging.warning("Set workers is greater than required. Min required workers is %d.", len(self.hosts))
-
-		if len(self.hosts) > 1:
-			logging.info("Pinging %d hosts", len(self.hosts))
-		else:
-			logging.info("Pinging %s", self.hosts[0]["name"])
+		Loggers.configure_logger(self.max_threads)
+		Loggers.configure_console_logger()
+		Loggers.configure_database_logger(self.database_stream_str)
+		Loggers.entry_message(self.hosts, self.max_threads)
 
 		for thread_id in range(self.max_threads):
 			worker = Thread(target=self.pinger, args=(thread_id,))
@@ -113,9 +73,5 @@ class Pinger:
 
 		self.queue.join()
 
-		if len(self.hosts) > 1:
-			logging.info("Finished pinging %d hosts", len(self.hosts))
-		else:
-			logging.info("Finished pinging %s", self.hosts[0]["name"])
-
+		Loggers.exit_message(self.hosts)
 		self.save_log_to_database()
