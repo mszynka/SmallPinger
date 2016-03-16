@@ -10,4 +10,5 @@ class LogModel(Base):
 	id = Column(Integer, primary_key=True)
 	date = Column(String(250), nullable=False)
 	hosts = Column(String(), nullable=False)
+	failed_hosts = Column(String(), nullable=True)
 	log = Column(String(), nullable=False)

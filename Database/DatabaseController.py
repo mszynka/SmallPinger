@@ -12,7 +12,7 @@ class Database:
 		dbsession = sessionmaker(bind=self.engine)
 		self.session = dbsession()
 
-	def log (self, date, hosts, log):
-		model = LogModel(date=date, hosts=hosts, log=log)
+	def log (self, date, hosts, log, failed_hosts=None):
+		model = LogModel(date=date, hosts=hosts, log=log, failed_hosts=failed_hosts)
 		self.session.add(model)
 		self.session.commit()

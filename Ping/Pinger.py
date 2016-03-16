@@ -23,6 +23,7 @@ class Pinger:
 		self.queue = Queue()
 		self.config_path = "config/config.json"
 		self.hosts_path = "config/hosts.json"
+		self.failed_hosts = []
 
 		with open(self.hosts_path) as data_file:
 			self.hosts = json.load(data_file)
@@ -34,7 +35,14 @@ class Pinger:
 			self.sqlitePath = config.get("databasePath") if config.get("databasePath") else "sqlite_log.db"
 
 	def save_log_to_database (self):
-		self.database.log(self.database_date_time, str(self.hosts), self.database_stream_str.getvalue())
+		"""
+		Saves log to database entity
+		"""
+		# noinspection PyTypeChecker
+		if len(self.failed_hosts) == 0:
+			self.failed_hosts = None
+		self.database.log(self.database_date_time, str(self.hosts), self.database_stream_str.getvalue(),
+		                  self.failed_hosts)
 
 	def pinger (self, thread_id):
 		"""
@@ -44,13 +52,14 @@ class Pinger:
 		while True:
 			host = self.queue.get()
 			logging.debug("Thread %s: Pinging %s", thread_id, host["name"])
-			logging.debug("ping -c 1 %s", host["url"])
+			logging.debug("Thread %s: ping -c 1 %s", thread_id, host["url"])
 			ret = subprocess.call("ping -c 1 %s" % host["url"], shell=True, stdout=open('/dev/null', 'w'),
 			                      stderr=subprocess.STDOUT)
 			if ret == 0:
-				logging.info("%s: is alive", host["name"])
+				logging.info("Thread %s: %s: is alive", thread_id, host["name"])
 			else:
-				logging.error("%s: did not respond", host["name"])
+				logging.error("Thread %s: %s: did not respond", thread_id, host["name"])
+				self.failed_hosts.append(host["name"])
 			logging.debug("Thread %s: Ping returned: %s with url: %s ", thread_id, ret, host["url"])
 			self.queue.task_done()
 

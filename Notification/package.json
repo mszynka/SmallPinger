@@ -1,0 +1,15 @@
+{
+  "name": "sqlite-notification-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "NotificationAPI.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mateusz Szynka <devmsw12@gmail.com> (http://mszynka.pl)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.4",
+    "sqlite3": "^3.1.1"
+  }
+}
