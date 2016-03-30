@@ -49,3 +49,4 @@ fabric.properties
 __pycache__
 *.db
 *.log
+node_modules/

@@ -12,7 +12,6 @@ def ping ():
 
 def check ():
 	n = NotificationService()
-	n.down_hosts = ["test1", "test2"]
 	n.notify()
 
 
@@ -20,7 +19,7 @@ def parse_arguments (args):
 	if len(args):
 		if args[0] == "ping":
 			ping()
-		elif args[0] == "check":
+		elif args[0] == "notify":
 			check()
 		else:
 			logging.error("No valid argument specified")

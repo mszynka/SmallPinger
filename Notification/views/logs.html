@@ -1,0 +1,153 @@
+<style>
+	table {
+		border: 0;
+	}
+
+	.failed {
+		color: red;
+	}
+
+	.ping-message {
+		border-bottom: 1px solid #ccc;
+		margin-bottom: 1em;
+	}
+
+	.log-table {
+		padding: 0 1em;
+	}
+
+	code {
+		line-height: 1.4em;
+		width: 100%;
+		padding: .7rem;
+	}
+
+	.label[outline]{
+		padding: 0 0.6rem;
+		border-top: 0;
+    border-bottom: 0;
+    border-radius: .4rem;
+    width: 5rem;
+    display: inline-block;
+	}
+
+	span.h5 {
+		font-weight: bold;
+		text-rendering: optimizeLegibility;
+		font-size: 1.6rem;
+    line-height: 24px;
+    margin-right: 1rem;
+	}
+
+	td.line-number {
+		color: #999;
+		border-right: 1px solid #ccc;
+		text-align: right;
+	}
+
+	td {
+		padding: 0 !important;
+	}
+
+	.hosts-list {
+		margin: 0 1.5em .7em;
+	}
+
+	.span-link {
+		cursor: pointer;
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	.noscript-hidden, .xscript-hidden {
+		display: none;
+	}
+
+	.left-h {
+		width: 50%;
+		float: left;
+	}
+
+	.right-h {
+		width: 50%;
+		float: right;
+		text-align: right;
+	}
+
+	.clearfix {
+		clear: both;
+	}
+
+	button {
+		height: 28px;
+		line-height: 28px;
+		padding: 0px 20px;
+	}
+</style>
+
+<script>
+	window.onload = function ()
+	{
+		try {
+			var elems = document.getElementsByClassName("noscript-hidden");
+			for (i in elems) {
+				if(elems[0].className)
+					elems[0].className = elems[0].className.replace("noscript-hidden", "");
+		  }
+
+		  var elems = document.getElementsByClassName("noscript-hidden");
+			for (i in elems) {
+				if(elems[0].className)
+					elems[0].className = elems[0].className.replace("noscript-hidden", "");
+		  }
+		} catch(e) {
+			// Error proofing
+		}
+		  var elems = document.getElementsByClassName("xscript-hide");
+			for (i in elems) {
+				if(elems[0].className)
+					elems[0].className = elems[0].className.replace("xscript-hide", "xscript-hidden");
+		  }
+	}
+
+	function show_hide(source) {
+		var elems = document.getElementsByClassName(source);
+		if(elems[0].className){
+			if(elems[0].className.indexOf("xscript-hidden") > 0)
+				elems[0].className = elems[0].className.replace("xscript-hidden", "xscript-hide");
+			else
+				elems[0].className = elems[0].className.replace("xscript-hide", "xscript-hidden");
+		}
+	}
+</script>
+
+	{{#rows}}
+	<div class="ping-message">
+		<div class="left-h">
+			<span class="h5">Ping result</span><span class="badge badge-success">{{num_up_hosts}}</span> <span class="badge badge-error">{{num_down_hosts}}</span><br>
+			<var>{{date}}</var>
+		</div>
+		<div class="right-h noscript-hidden">
+			<button onclick="show_hide('{{date_string}}_hosts')">Hosts</button>
+			<button onclick="show_hide('{{date_string}}_log')">Log</button>
+		</div>
+		<div class="clearfix"></div>
+		<ul class="list-flat hosts-list xscript-hide {{date_string}}_hosts">
+		{{#hosts}}
+		<li class="noscript-hidden {{failed}}">
+			<span class="span-link" onclick="window.open('{{url}}','_blank');" title="{{url}}">{{name}}</span>
+		</li>
+		<noscript>
+			<li class="{{failed}}">
+				<a class="span-link" href="{{url}}" title="{{url}}">{{name}}</span>
+			</li>
+		</noscript>
+		{{/hosts}}
+		</ul>
+		<div class="log-table xscript-hide {{date_string}}_log">
+			{{{log}}}
+		</div>
+	</div>
+{{/rows}}
